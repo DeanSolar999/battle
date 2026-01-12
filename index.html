@@ -227,7 +227,7 @@
     function logicCheck() {
         const s1 = parseInt(document.getElementById('s1').value) || 0, s2 = parseInt(document.getElementById('s2').value) || 0;
         const max = Math.max(s1, s2);
-        let hint = max >= 31 ? "🔥 最終對決：第 4 棒 + 第 1 棒" : max >= 21 ? "⚡ 第三階段：第 3 棒 + 第 4 棒" : max >= 11 ? "🛡️ 第二階段：第 2 棒 + 第 3 棒" : "🌱 開局階段：第 1 棒 + 第 2 棒";
+        let hint = max >= 30 ? "🔥 最終對決：第 4 棒 + 第 1 棒" : max >= 20 ? "⚡ 第三階段：第 3 棒 + 第 4 棒" : max >= 10 ? "🛡️ 第二階段：第 2 棒 + 第 3 棒" : "🌱 開局階段：第 1 棒 + 第 2 棒";
         document.getElementById('exchangeHint').innerText = "📢 " + hint;
     }
 
