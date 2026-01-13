@@ -66,14 +66,42 @@
             border: 1px solid rgba(251, 191, 36, 0.2); backdrop-filter: blur(10px);
         }
 
+        /* --- 加強版計分區塊 --- */
         .score-row { display: grid; grid-template-columns: 1fr auto 1fr; gap: 15px; align-items: center; }
-        .team-card { padding: 25px 15px; border-radius: 20px; text-align: center; }
-        .name-highlight { font-size: 2rem; font-weight: 900; margin-bottom: 10px; display: block; }
-        .score-input { 
-            width: 90%; font-size: 6rem; text-align: center; 
-            border: 4px solid var(--gold); border-radius: 20px; 
-            font-weight: 800; color: white; background: rgba(0,0,0,0.3); 
+        .team-card { padding: 20px 10px; border-radius: 20px; text-align: center; }
+        .name-highlight { font-size: 1.8rem; font-weight: 900; margin-bottom: 15px; display: block; height: 2.5rem; overflow: hidden; }
+        
+        .score-control {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
         }
+
+        .score-input { 
+            width: 100px; font-size: 4rem; text-align: center; 
+            border: none; border-bottom: 3px solid var(--gold); 
+            font-weight: 800; color: white; background: transparent; 
+        }
+
+        /* 放大按鈕樣式 */
+        .step-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: none;
+            font-size: 2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        .step-btn:active { transform: scale(0.9); }
+        .btn-minus { background: #475569; color: white; }
+        .btn-plus { background: var(--gold); color: var(--bg-deep); }
 
         .exchange-alert { 
             grid-column: 1 / -1; background: linear-gradient(90deg, #7c2d12, var(--focus-orange)); 
@@ -102,21 +130,13 @@
 
         @media (max-width: 768px) {
             .score-row { grid-template-columns: 1fr; }
-            .score-input { font-size: 4rem; }
+            .step-btn { width: 70px; height: 70px; font-size: 2.5rem; } /* 手機端更放大 */
             .main-header h1 { font-size: 1.8rem; }
         }
 
-        body.broadcast-mode { background: #020617; overflow: hidden; }
-        body.broadcast-mode .castle-selector, 
-        body.broadcast-mode .panel:nth-child(2), 
-        body.broadcast-mode .main-header, 
-        body.broadcast-mode .btn-save,
-        body.broadcast-mode .history-section,
-        body.broadcast-mode select { display: none !important; }
-
-        body.broadcast-mode .main-grid { display: flex; height: 100vh; align-items: center; justify-content: center; max-width: 100vw; }
-        body.broadcast-mode .panel:first-child { width: 95%; background: none; border: none; }
-        body.broadcast-mode .score-input { font-size: 15rem; border: none; }
+        /* 全螢幕轉播 */
+        body.broadcast-mode .step-btn, body.broadcast-mode .btn-save, body.broadcast-mode select { display: none !important; }
+        body.broadcast-mode .score-input { font-size: 15rem; width: auto; border: none; }
         body.broadcast-mode .name-highlight { font-size: 5rem; text-shadow: 0 0 30px var(--gold); }
 
         .broadcast-ctrl {
@@ -147,49 +167,20 @@
                 <small>🛡️ 仙盟守護者</small>
                 <select id="team1" onchange="updateView()" style="width:100%; margin:10px 0;"></select>
                 <span class="name-highlight" id="showName1">隊伍</span>
-                <input type="number" id="s1" class="score-input" value="0" oninput="logicCheck()">
+                <div class="score-control">
+                    <button class="step-btn btn-minus" onclick="changeScore('s1', -1)">-</button>
+                    <input type="number" id="s1" class="score-input" value="0" readonly>
+                    <button class="step-btn btn-plus" onclick="changeScore('s1', 1)">+</button>
+                </div>
             </div>
-            <div style="font-size: 3rem; font-weight: 900; color: white;">VS</div>
+
+            <div style="font-size: 2.5rem; font-weight: 900; color: white;">VS</div>
+
             <div class="team-card" style="background:var(--attack-bg); border:2px solid white; color:var(--bg-deep);">
                 <small style="color:#64748b">⚔️ 魔淵侵略者</small>
                 <select id="team2" onchange="updateView()" style="width:100%; margin:10px 0;"></select>
                 <span class="name-highlight" id="showName2" style="color:var(--attack-text);">隊伍</span>
-                <input type="number" id="s2" class="score-input" value="0" oninput="logicCheck()" style="color:var(--bg-deep); border-color:var(--attack-text);">
-            </div>
-            <div class="exchange-alert" id="exchangeHint">📢 開局階段：第 1 棒 + 第 2 棒</div>
-        </div>
-        <button class="btn-save" onclick="saveMatch()">儲存成績並同步雲端 💾</button>
-    </div>
-
-    <div class="panel">
-        <h2 style="color:var(--gold); text-align:center;">🥇 鴻蒙至尊榜</h2>
-        <div class="scroll-area">
-            <table>
-                <thead><tr><th>排名</th><th>隊伍</th><th>得分</th><th>失分</th></tr></thead>
-                <tbody id="rankBody"></tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
-<div class="panel history-section" style="max-width:1300px; margin:20px auto;">
-    <h3>📜 全球同步戰報歷史</h3>
-    <table id="historyTable">
-        <thead><tr><th>場地</th><th>對決</th><th>比分</th><th>勝方</th><th>操作</th></tr></thead>
-        <tbody id="historyBody"></tbody>
-    </table>
-    <div style="text-align:right;"><button onclick="resetAll()" style="background:none; border:none; color:#475569; cursor:pointer;">清空所有雲端戰績</button></div>
-</div>
-
-<button class="broadcast-ctrl" onclick="toggleBroadcast()">📺 切換轉播模式</button>
-
-<script>
-// --- 1. Firebase 配置 ---
-const firebaseConfig = {
-    apiKey: "AIzaSyC7Yfb6ycsU6vtef87od7D1CvkTdhBofsQ",
-    authDomain: "muyao-battle.firebaseapp.com",
-    databaseURL: "https://muyao-battle-default-rtdb.firebaseio.com",
-    projectId: "muyao-battle",
-    storageBucket: "muyao-battle.firebasestorage.app",
-    messagingSenderId: "965731403350",
-    appId: "1:965731403350:web:adb6e53abecd6655035df7",
+                <div class="score-control">
+                    <button class="step-btn btn-minus" onclick="changeScore('s2', -1)" style="background:#94a3b8;">-</button>
+                    <input type="number" id="s2" class="score-input" value="0" readonly style="color:var(--bg-deep); border-color:var(--attack-text);">
+                    <button class="
