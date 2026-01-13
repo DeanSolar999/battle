@@ -1,273 +1,126 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2026 木曜修仙鬥法年終賽 - 仙魔巔峰控台</title>
-<link rel="icon" href="https://cdn-icons-png.flaticon.com/512/103/103173.png">
+// --- 1. Firebase 初始化設定 ---
+const firebaseConfig = {
+    apiKey: "AIzaSyC7Yfb6ycsU6vtef87od7D1CvkTdhBofsQ",
+    authDomain: "muyao-battle.firebaseapp.com",
+    databaseURL: "https://muyao-battle-default-rtdb.firebaseio.com",
+    projectId: "muyao-battle",
+    storageBucket: "muyao-battle.firebasestorage.app",
+    messagingSenderId: "965731403350",
+    appId: "1:965731403350:web:adb6e53abecd6655035df7",
+    measurementId: "G-REWF1KXX23"
+};
+
+// 初始化 Firebase (使用相容模式 SDK)
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// --- 2. 核心變數與初始化 ---
+const teamList = ["天南第一落雲宗", "七玄聖門", "靈獸守山宗", "聖道雙修合歡宗", "拍痰翻身碎骨宗", "攻城四仙風雨雷電", "操獸御0宗", "掩月幻影魔宗"];
+let stats = {}, historyData = [], currentCastle = "城池壹";
+
+function init() {
+    // 設定下拉選單
+    const sel1 = document.getElementById('team1'), sel2 = document.getElementById('team2');
+    teamList.forEach((t, i) => {
+        let opt = `<option value="${t}">${t}</option>`;
+        if(i < 4) sel1.innerHTML += opt; else sel2.innerHTML += opt;
+    });
+
+    // --- 3. 【同步核心】監聽雲端資料庫 ---
+    db.ref('immortal_battle_data').on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+            stats = data.stats || {};
+            historyData = data.history || [];
+            // 確保隊伍資料結構完整
+            teamList.forEach(t => { if(!stats[t]) stats[t] = { score: 0, loss: 0 }; });
+        } else {
+            // 若雲端無資料則進行初始化
+            teamList.forEach(t => stats[t] = { score: 0, loss: 0 });
+            historyData = [];
+        }
+        updateView();
+        refreshRank();
+        renderHistory();
+    });
+}
+
+// --- 4. 【同步核心】將異動推送到雲端 ---
+function syncToCloud() {
+    db.ref('immortal_battle_data').set({
+        stats: stats,
+        history: historyData
+    });
+}
+
+function setCastle(btn, name) {
+    document.querySelectorAll('.castle-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active'); 
+    currentCastle = name;
+    document.getElementById('activeCastleLabel').innerText = "🚩 實時戰況：" + name;
+}
+
+function updateView() {
+    const t1 = document.getElementById('team1').value;
+    const t2 = document.getElementById('team2').value;
+    if(t1) document.getElementById('showName1').innerText = t1;
+    if(t2) document.getElementById('showName2').innerText = t2;
+}
+
+function logicCheck() {
+    const s1 = parseInt(document.getElementById('s1').value) || 0, s2 = parseInt(document.getElementById('s2').value) || 0;
+    const max = Math.max(s1, s2);
+    let hint = max >= 30 ? "🔥 最終對決：第 4 棒 + 第 1 棒" : max >= 20 ? "⚡ 第三階段" : max >= 10 ? "🛡️ 第二階段" : "🌱 開局階段";
+    document.getElementById('exchangeHint').innerText = "📢 " + hint;
+}
+
+function saveMatch() {
+    const t1 = document.getElementById('team1').value, t2 = document.getElementById('team2').value;
+    const s1 = parseInt(document.getElementById('s1').value) || 0, s2 = parseInt(document.getElementById('s2').value) || 0;
     
-    <style>
-        :root {
-            --bg-deep: #020617;
-            --bg-panel: rgba(30, 41, 59, 0.7);
-            --defend-bg: #0f172a; 
-            --attack-bg: #f8fafc;
-            --gold: #fbbf24;
-            --attack-text: #059669;
-            --focus-orange: #f97316;
-            --text-silver: #cbd5e1;
-            --danger: #ef4444;
-        }
+    if(!stats[t1]) stats[t1] = { score: 0, loss: 0 };
+    if(!stats[t2]) stats[t2] = { score: 0, loss: 0 };
 
-        /* --- 基礎樣式 --- */
-        body { 
-            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; 
-            background: radial-gradient(circle at center, #1e293b 0%, var(--bg-deep) 100%);
-            color: var(--text-silver); 
-            margin: 0; padding: 0; min-height: 100vh;
-            transition: background 0.5s;
-        }
-        
-        .main-header {
-            background: rgba(2, 6, 23, 0.9);
-            color: var(--gold);
-            padding: 30px 20px;
-            text-align: center;
-            border-bottom: 4px solid var(--gold);
-        }
+    stats[t1].score += s1; stats[t1].loss += s2;
+    stats[t2].score += s2; stats[t2].loss += s1;
+    
+    historyData.unshift({ 
+        id: Date.now(), castle: currentCastle, teamA: t1, teamB: t2, 
+        scoreA: s1, scoreB: s2, winner: s1 > s2 ? t1 : (s2 > s1 ? t2 : "平手")
+    });
+    
+    syncToCloud(); // 儲存時同步到雲端
+    document.getElementById('s1').value = 0; 
+    document.getElementById('s2').value = 0;
+}
 
-        .main-header h1 { margin: 0; font-size: 2.5rem; letter-spacing: 10px; font-weight: 900; }
-
-        /* --- 版面配置 --- */
-        .castle-selector {
-            display: grid; grid-template-columns: repeat(4, 1fr);
-            gap: 12px; max-width: 1200px; margin: 20px auto; padding: 0 20px;
-        }
-
-        .castle-btn {
-            padding: 15px; background: #1e293b; border: 2px solid var(--gold);
-            border-radius: 12px; color: var(--gold); cursor: pointer; font-weight: bold;
-            transition: 0.3s;
-        }
-
-        .castle-btn.active {
-            background: var(--gold); color: var(--bg-deep);
-            box-shadow: 0 0 20px rgba(251, 191, 36, 0.6);
-        }
-
-        .main-grid { 
-            display: grid; grid-template-columns: 1.2fr 0.8fr; 
-            gap: 25px; max-width: 1300px; margin: 0 auto; padding: 0 20px; 
-        }
-
-        .panel { 
-            background: var(--bg-panel); border-radius: 24px; padding: 25px; 
-            border: 1px solid rgba(251, 191, 36, 0.2); backdrop-filter: blur(10px);
-        }
-
-        /* --- 對壘面板 --- */
-        .score-row { display: grid; grid-template-columns: 1fr auto 1fr; gap: 15px; align-items: center; }
-        
-        .team-card { padding: 25px 15px; border-radius: 20px; text-align: center; }
-        
-        .name-highlight { font-size: 2rem; font-weight: 900; margin-bottom: 10px; display: block; }
-        
-        .score-input { 
-            width: 90%; font-size: 6rem; text-align: center; 
-            border: 4px solid var(--gold); border-radius: 20px; 
-            font-weight: 800; color: white; background: rgba(0,0,0,0.3); 
-        }
-
-        .exchange-alert { 
-            grid-column: 1 / -1; background: linear-gradient(90deg, #7c2d12, var(--focus-orange)); 
-            color: white; padding: 18px; border-radius: 15px; text-align: center; 
-            font-weight: 900; margin: 20px 0; font-size: 1.4rem;
-        }
-
-        /* --- 排行榜與表格 --- */
-        .scroll-area { height: 450px; overflow-y: auto; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th { background: rgba(2, 6, 23, 0.5); padding: 12px; color: var(--gold); border-bottom: 2px solid var(--gold); }
-        td { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); text-align: center; }
-        .rank-top { background: rgba(251, 191, 36, 0.1); }
-
-        /* --- 按鈕 --- */
-        .btn-save { 
-            width: 100%; padding: 20px; background: var(--focus-orange); 
-            color: white; border: none; border-radius: 50px; 
-            font-size: 1.5rem; font-weight: bold; cursor: pointer; transition: 0.3s;
-        }
-        .btn-save:hover { background: #ea580c; transform: translateY(-3px); }
-        
-        .btn-delete { background: none; border: 1px solid var(--danger); color: var(--danger); padding: 5px; cursor: pointer; border-radius: 5px; }
-
-        /* --- RWD 響應式 --- */
-        @media (max-width: 1024px) {
-            .main-grid { grid-template-columns: 1fr; }
-            .castle-selector { grid-template-columns: repeat(2, 1fr); }
-        }
-
-        @media (max-width: 768px) {
-            .score-row { grid-template-columns: 1fr; }
-            .score-input { font-size: 4rem; }
-            .main-header h1 { font-size: 1.8rem; }
-        }
-
-        /* --- 全螢幕轉播模式 --- */
-        body.broadcast-mode { background: #020617; overflow: hidden; }
-        body.broadcast-mode .castle-selector, 
-        body.broadcast-mode .panel:nth-child(2), 
-        body.broadcast-mode .main-header, 
-        body.broadcast-mode .btn-save,
-        body.broadcast-mode .history-section,
-        body.broadcast-mode select { display: none !important; }
-
-        body.broadcast-mode .main-grid { display: flex; height: 100vh; align-items: center; justify-content: center; max-width: 100vw; }
-        body.broadcast-mode .panel:first-child { width: 95%; background: none; border: none; }
-        body.broadcast-mode .score-input { font-size: 15rem; border: none; }
-        body.broadcast-mode .name-highlight { font-size: 5rem; text-shadow: 0 0 30px var(--gold); }
-
-        .broadcast-ctrl {
-            position: fixed; bottom: 20px; right: 20px; z-index: 100;
-            background: var(--gold); color: black; border: none; padding: 10px 20px; border-radius: 50px; cursor: pointer; font-weight: bold;
-        }
-    </style>
-</head>
-<body>
-
-<header class="main-header">
-    <h1>2026 木曜修仙鬥法年終賽</h1>
-    <p>「仙盟守正道 ‧ 魔淵奪天機」</p>
-</header>
-
-<div class="castle-selector">
-    <button class="castle-btn active" onclick="setCastle(this, '城池壹')">🏰 城池壹</button>
-    <button class="castle-btn" onclick="setCastle(this, '城池貳')">🏰 城池貳</button>
-    <button class="castle-btn" onclick="setCastle(this, '城池參')">🏰 城池參</button>
-    <button class="castle-btn" onclick="setCastle(this, '城池肆')">🏰 城池肆</button>
-</div>
-
-<div class="main-grid">
-    <div class="panel">
-        <center><div id="activeCastleLabel" style="color:var(--gold); margin-bottom:15px; font-weight:bold;">🚩 實時戰況：城池壹</div></center>
-        <div class="score-row">
-            <div class="team-card" style="background:var(--defend-bg); border:2px solid var(--gold); color:var(--gold);">
-                <small>🛡️ 仙盟守護者</small>
-                <select id="team1" onchange="updateView()" style="width:100%; margin:10px 0;"></select>
-                <span class="name-highlight" id="showName1">隊伍</span>
-                <input type="number" id="s1" class="score-input" value="0" oninput="logicCheck()">
-            </div>
-            <div style="font-size: 3rem; font-weight: 900; color: white;">VS</div>
-            <div class="team-card" style="background:var(--attack-bg); border:2px solid white; color:var(--bg-deep);">
-                <small style="color:#64748b">⚔️ 魔淵侵略者</small>
-                <select id="team2" onchange="updateView()" style="width:100%; margin:10px 0;"></select>
-                <span class="name-highlight" id="showName2" style="color:var(--attack-text);">隊伍</span>
-                <input type="number" id="s2" class="score-input" value="0" oninput="logicCheck()" style="color:var(--bg-deep); border-color:var(--attack-text);">
-            </div>
-            <div class="exchange-alert" id="exchangeHint">📢 開局階段：第 1 棒 + 第 2 棒</div>
-        </div>
-        <button class="btn-save" onclick="saveMatch()">儲存成績 💾</button>
-    </div>
-
-    <div class="panel">
-        <h2 style="color:var(--gold); text-align:center;">🥇 鴻蒙至尊榜</h2>
-        <div class="scroll-area">
-            <table>
-                <thead><tr><th>排名</th><th>隊伍</th><th>得分</th><th>失分</th></tr></thead>
-                <tbody id="rankBody"></tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
-<div class="panel history-section" style="max-width:1300px; margin:20px auto;">
-    <h3>📜 戰報歷史</h3>
-    <table id="historyTable">
-        <thead><tr><th>場地</th><th>對決</th><th>比分</th><th>勝方</th><th>操作</th></tr></thead>
-        <tbody id="historyBody"></tbody>
-    </table>
-    <div style="text-align:right;"><button onclick="resetAll()" style="background:none; border:none; color:#475569; cursor:pointer;">清空重設</button></div>
-</div>
-
-<button class="broadcast-ctrl" onclick="toggleBroadcast()">📺 切換轉播模式</button>
-
-<script>
-    const teamList = ["天南第一落雲宗", "七玄聖門", "靈獸守山宗", "聖道雙修合歡宗", "拍痰翻身碎骨宗", "攻城四仙風雨雷電", "操獸御0宗", "掩月幻影魔宗"];
-    let stats = {}, historyData = [], currentCastle = "城池壹";
-
-    function init() {
-        const sStats = localStorage.getItem('m_stats'), sHist = localStorage.getItem('m_hist');
-        if(sStats && sHist) { stats = JSON.parse(sStats); historyData = JSON.parse(sHist); } 
-        else { teamList.forEach(t => stats[t] = { score: 0, loss: 0 }); }
-        
-        const sel1 = document.getElementById('team1'), sel2 = document.getElementById('team2');
-        teamList.forEach((t, i) => {
-            let opt = `<option value="${t}">${t}</option>`;
-            if(i < 4) sel1.innerHTML += opt; else sel2.innerHTML += opt;
-        });
-        updateView(); refreshRank(); renderHistory();
+function deleteMatch(id) {
+    if(!confirm("確定要撤銷這筆紀錄嗎？")) return;
+    const idx = historyData.findIndex(m => m.id === id);
+    if(idx > -1) {
+        const m = historyData[idx];
+        stats[m.teamA].score -= m.scoreA; stats[m.teamA].loss -= m.scoreB;
+        stats[m.teamB].score -= m.scoreB; stats[m.teamB].loss -= m.scoreA;
+        historyData.splice(idx, 1);
+        syncToCloud(); // 刪除後同步到雲端
     }
+}
 
-    function saveData() {
-        localStorage.setItem('m_stats', JSON.stringify(stats));
-        localStorage.setItem('m_hist', JSON.stringify(historyData));
-    }
+function refreshRank() {
+    let sorted = Object.keys(stats).map(n => ({ name: n, ...stats[n] })).sort((a,b) => b.score - a.score);
+    document.getElementById('rankBody').innerHTML = sorted.map((t, i) => `<tr class="${i<3?'rank-top':''}"><td>${i+1}</td><td>${t.name}</td><td>${t.score}</td><td>${t.loss}</td></tr>`).join('');
+}
 
-    function setCastle(btn, name) {
-        document.querySelectorAll('.castle-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active'); currentCastle = name;
-        document.getElementById('activeCastleLabel').innerText = "🚩 實時戰況：" + name;
-    }
+function renderHistory() {
+    document.getElementById('historyBody').innerHTML = historyData.map(m => `<tr><td>${m.castle}</td><td>${m.teamA} vs ${m.teamB}</td><td>${m.scoreA}:${m.scoreB}</td><td>${m.winner}</td><td><button class="btn-delete" onclick="deleteMatch(${m.id})">撤銷</button></td></tr>`).join('');
+}
 
-    function updateView() {
-        document.getElementById('showName1').innerText = document.getElementById('team1').value;
-        document.getElementById('showName2').innerText = document.getElementById('team2').value;
-    }
+function toggleBroadcast() {
+    document.body.classList.toggle('broadcast-mode');
+    if(document.body.classList.contains('broadcast-mode')) document.documentElement.requestFullscreen();
+    else document.exitFullscreen();
+}
 
-    function logicCheck() {
-        const s1 = parseInt(document.getElementById('s1').value) || 0, s2 = parseInt(document.getElementById('s2').value) || 0;
-        const max = Math.max(s1, s2);
-        let hint = max >= 30 ? "🔥 最終對決：第 4 棒 + 第 1 棒" : max >= 20 ? "⚡ 第三階段：第 3 棒 + 第 4 棒" : max >= 10 ? "🛡️ 第二階段：第 2 棒 + 第 3 棒" : "🌱 開局階段：第 1 棒 + 第 2 棒";
-        document.getElementById('exchangeHint').innerText = "📢 " + hint;
-    }
+function resetAll() { if(confirm("確定清空所有雲端數據？")) { db.ref('immortal_battle_data').remove(); } }
 
-    function saveMatch() {
-        const t1 = document.getElementById('team1').value, t2 = document.getElementById('team2').value;
-        const s1 = parseInt(document.getElementById('s1').value) || 0, s2 = parseInt(document.getElementById('s2').value) || 0;
-        stats[t1].score += s1; stats[t1].loss += s2;
-        stats[t2].score += s2; stats[t2].loss += s1;
-        historyData.unshift({ id: Date.now(), castle: currentCastle, teamA: t1, teamB: t2, scoreA: s1, scoreB: s2, winner: s1 > s2 ? t1 : t2 });
-        saveData(); refreshRank(); renderHistory();
-        document.getElementById('s1').value = 0; document.getElementById('s2').value = 0;
-    }
-
-    function deleteMatch(id) {
-        const idx = historyData.findIndex(m => m.id === id);
-        if(idx > -1) {
-            const m = historyData[idx];
-            stats[m.teamA].score -= m.scoreA; stats[m.teamA].loss -= m.scoreB;
-            stats[m.teamB].score -= m.scoreB; stats[m.teamB].loss -= m.scoreA;
-            historyData.splice(idx, 1); saveData(); refreshRank(); renderHistory();
-        }
-    }
-
-    function refreshRank() {
-        let sorted = Object.keys(stats).map(n => ({ name: n, ...stats[n] })).sort((a,b) => b.score - a.score);
-        document.getElementById('rankBody').innerHTML = sorted.map((t, i) => `<tr class="${i<3?'rank-top':''}"><td>${i+1}</td><td>${t.name}</td><td>${t.score}</td><td>${t.loss}</td></tr>`).join('');
-    }
-
-    function renderHistory() {
-        document.getElementById('historyBody').innerHTML = historyData.map(m => `<tr><td>${m.castle}</td><td>${m.teamA} vs ${m.teamB}</td><td>${m.scoreA}:${m.scoreB}</td><td>${m.winner}</td><td><button class="btn-delete" onclick="deleteMatch(${m.id})">撤銷</button></td></tr>`).join('');
-    }
-
-    function toggleBroadcast() {
-        document.body.classList.toggle('broadcast-mode');
-        if(document.body.classList.contains('broadcast-mode')) document.documentElement.requestFullscreen();
-        else document.exitFullscreen();
-    }
-
-    function resetAll() { if(confirm("確定重設所有戰績？")) { localStorage.clear(); location.reload(); } }
-    init();
-</script>
-</body>
-</html>
+init();
