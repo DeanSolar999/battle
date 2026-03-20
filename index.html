@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>2026 月曜修仙鬥法季冠賽 - 仙魔巔峰同步控台</title>
+    <title>2026 木曜修仙鬥法年終賽 - 仙魔巔峰同步控台</title>
     <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/103/103173.png">
     
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -11,7 +11,7 @@
 
     <style>
         /* ---------------------------------------------------
-           🎨 美術風格重構：氣勢磅礡、鎏金典雅的仙魔大戰
+           🎨 美術風格：氣勢磅礡、鎏金典雅的仙魔大戰
            --------------------------------------------------- */
         :root {
             --bg-deep: #050508; 
@@ -35,6 +35,18 @@
 
         * { -webkit-tap-highlight-color: transparent; user-select: none; }
         input { user-select: auto; }
+
+        /* 🔥 終極封印：徹底隱藏所有瀏覽器預設的數字上下箭頭 */
+        .score-input::-webkit-outer-spin-button,
+        .score-input::-webkit-inner-spin-button {
+            -webkit-appearance: none !important;
+            margin: 0 !important;
+            display: none !important;
+        }
+        .score-input[type="number"] {
+            -moz-appearance: textfield !important;
+            appearance: textfield !important;
+        }
 
         body { 
             font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; 
@@ -156,6 +168,7 @@
             width: 80px; font-size: 3.5rem; text-align: center; 
             border: none; border-bottom: 2px solid currentColor; 
             font-weight: 800; background: transparent; text-shadow: 0 0 20px currentColor; 
+            outline: none;
         }
 
         .step-btn {
@@ -273,7 +286,7 @@
 <body>
 
 <header class="main-header">
-    <h1>2026月曜修仙鬥法季冠賽 </h1>
+    <h1>2026 木曜修仙鬥法年終賽</h1>
     <p style="color:var(--text-silver); text-shadow: 0 2px 4px #000; letter-spacing: 2px;">⚡ 仙魔巔峰對決 ‧ 雲端即時同步 ⚡</p>
 </header>
 
@@ -436,7 +449,6 @@ function updateView() {
     document.getElementById('showName2').innerText = t2 || "隊伍";
 }
 
-/* 🔥 更新：將四個階段精準替換為指定的棒次組合 */
 function logicCheck() {
     const s1 = parseInt(document.getElementById('s1').value) || 0, s2 = parseInt(document.getElementById('s2').value) || 0;
     const max = Math.max(s1, s2);
