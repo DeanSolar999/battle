@@ -7,10 +7,10 @@
     
     <meta property="og:title" content="月曜修仙鬥法季冠賽 - 仙魔巔峰同步控台">
     <meta property="og:description" content="⚡ 仙魔巔峰對決 ‧ 雲端即時同步！點擊進入觀看最新戰況。">
-    <meta property="og:image" content="https://cdn-icons-png.flaticon.com/512/1054/1054045.png">
+    <meta property="og:image" content="https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Crossed_swords.svg/512px-Crossed_swords.svg.png">
     <meta property="og:type" content="website">
 
-    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/1054/1054045.png">
+    <link rel="icon" href="https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Crossed_swords.svg/512px-Crossed_swords.svg.png">
     
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -23,12 +23,10 @@
             --bg-deep: #050508; 
             --bg-panel: rgba(15, 18, 25, 0.85); 
             
-            /* 🛡️ 守城：深邃幽藍與鎏金 */
             --defend-bg: #091321; 
             --defend-border: #d4af37; 
             --defend-text: #fef08a; 
             
-            /* ⚔️ 攻城：幽冥深淵與寒冰藍 */
             --attack-bg: #030d17; 
             --attack-border: #0077b6; 
             --attack-text: #00b4d8; 
@@ -42,7 +40,6 @@
         * { -webkit-tap-highlight-color: transparent; user-select: none; }
         input { user-select: auto; }
 
-        /* 🔥 終極封印：徹底隱藏所有瀏覽器預設的數字上下箭頭 */
         .score-input::-webkit-outer-spin-button,
         .score-input::-webkit-inner-spin-button {
             -webkit-appearance: none !important;
@@ -254,6 +251,19 @@
             box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
         }
 
+        /* 滅世大陣按鈕專屬樣式：居中、霸氣底色 */
+        .btn-wipe-all {
+            background: rgba(239, 68, 68, 0.1); border: 1px solid var(--danger); 
+            color: var(--danger); padding: 12px 25px; border-radius: 12px; 
+            cursor: pointer; font-size: 1rem; font-weight: bold; 
+            text-shadow: 0 0 10px rgba(239, 68, 68, 0.5); letter-spacing: 2px; 
+            transition: 0.3s; box-shadow: 0 0 15px rgba(239, 68, 68, 0.2);
+        }
+        .btn-wipe-all:hover {
+            background: var(--danger); color: white;
+            box-shadow: 0 0 25px rgba(239, 68, 68, 0.8); text-shadow: none;
+        }
+
         @media (max-width: 1024px) { .main-grid { grid-template-columns: 1fr; } }
         @media (max-width: 768px) {
             .score-row { grid-template-columns: 1fr; }
@@ -357,8 +367,8 @@
         <tbody id="historyBody"></tbody>
     </table>
     
-    <div style="text-align:right; margin-top:15px;">
-        <button onclick="resetAll()" style="background:none; border:none; color:var(--danger); cursor:pointer; font-size:0.9rem; font-weight:bold; text-shadow: 0 0 10px rgba(239, 68, 68, 0.5); letter-spacing: 1px; transition: 0.3s;">
+    <div style="text-align: center; margin-top: 35px; padding-bottom: 10px;">
+        <button class="btn-wipe-all" onclick="resetAll()">
             ⚠️ 啟動滅世大陣 (一鍵清零)
         </button>
     </div>
