@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>月曜修仙鬥法季冠賽 - 仙魔巔峰同步控台</title>
+    <title>曜日修仙鬥法季冠賽 - 仙魔巔峰同步控台</title>
     
-    <meta property="og:title" content="月曜修仙鬥法季冠賽 - 仙魔巔峰同步控台">
+    <meta property="og:title" content="曜日修仙鬥法季冠賽 - 仙魔巔峰同步控台">
     <meta property="og:description" content="⚡ 仙魔巔峰對決 ‧ 雲端即時同步！點擊進入觀看最新戰況。">
     <meta property="og:image" content="https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Crossed_swords.svg/512px-Crossed_swords.svg.png">
     <meta property="og:type" content="website">
@@ -77,6 +77,7 @@
         }
 
         .main-header {
+            position: relative; /* 為了讓卷軸按鈕可以絕對定位 */
             background: linear-gradient(180deg, rgba(10, 12, 16, 0.95) 0%, rgba(5, 5, 8, 0.95) 100%);
             padding: 20px; text-align: center;
             border-bottom: 4px solid var(--gold);
@@ -97,8 +98,9 @@
             to { background-position: 200% center; }
         }
 
+        /* ⚔️ 4 個場地的網格 */
         .castle-selector {
-            display: grid; grid-template-columns: repeat(3, 1fr);
+            display: grid; grid-template-columns: repeat(4, 1fr);
             gap: 10px; max-width: 1200px; margin: 15px auto; padding: 0 15px;
         }
 
@@ -200,8 +202,24 @@
             border: 1px solid rgba(255, 100, 50, 0.3); text-shadow: 0 2px 4px rgba(0,0,0,0.8);
         }
 
+        .faction-score-board {
+            display: flex; justify-content: space-between; align-items: center;
+            background: linear-gradient(90deg, rgba(9, 19, 33, 0.8) 0%, rgba(0,0,0,0.5) 50%, rgba(3, 13, 23, 0.8) 100%);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            border-radius: 12px; padding: 12px 20px; margin-bottom: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5), inset 0 0 15px rgba(0,0,0,0.5);
+        }
+        .faction-defend { color: var(--defend-text); font-weight: bold; letter-spacing: 1px; display: flex; align-items: center; gap: 8px;}
+        .faction-defend span { font-size: 2rem; color: var(--gold); text-shadow: 0 0 15px rgba(212,175,55,0.8); font-weight: 900; }
+        
+        .faction-attack { color: var(--attack-text); font-weight: bold; letter-spacing: 1px; display: flex; align-items: center; gap: 8px;}
+        .faction-attack span { font-size: 2rem; color: #fff; text-shadow: 0 0 15px rgba(0,180,216,0.8); font-weight: 900; }
+        
+        .faction-vs-small { color: rgba(255,255,255,0.2); font-style: italic; font-weight: 900; }
+
         .scroll-area { 
-            height: 400px; overflow-y: auto; border-radius: 10px; 
+            height: 330px; 
+            overflow-y: auto; border-radius: 10px; 
             background: rgba(0,0,0,0.4); box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
         }
         
@@ -251,7 +269,6 @@
             box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
         }
 
-        /* 滅世大陣按鈕專屬樣式：居中、霸氣底色 */
         .btn-wipe-all {
             background: rgba(239, 68, 68, 0.1); border: 1px solid var(--danger); 
             color: var(--danger); padding: 12px 25px; border-radius: 12px; 
@@ -264,12 +281,87 @@
             box-shadow: 0 0 25px rgba(239, 68, 68, 0.8); text-shadow: none;
         }
 
-        @media (max-width: 1024px) { .main-grid { grid-template-columns: 1fr; } }
+        /* ---------------------------------------------------
+           📜 方案一：乾坤卷軸 ‧ 門派牒文 (全螢幕彈出遮罩)
+           --------------------------------------------------- */
+        .roster-btn {
+            position: absolute; top: 25px; right: 25px;
+            background: linear-gradient(135deg, var(--gold), #aa8529); color: #050508;
+            border: 1px solid #ffdf00; padding: 8px 15px; border-radius: 8px;
+            font-weight: 900; cursor: pointer; box-shadow: 0 0 15px rgba(212,175,55,0.4);
+            transition: 0.3s; display: flex; align-items: center; gap: 6px; letter-spacing: 1px;
+            z-index: 20;
+        }
+        .roster-btn:hover { box-shadow: 0 0 25px rgba(212,175,55,0.8); transform: scale(1.05); }
+
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px);
+            z-index: 2000; display: flex; justify-content: center; align-items: center;
+            opacity: 0; visibility: hidden; transition: 0.3s ease-in-out;
+        }
+        .modal-overlay.show { opacity: 1; visibility: visible; }
+
+        .modal-content {
+            width: 90%; max-width: 1000px; max-height: 85vh;
+            background: linear-gradient(135deg, rgba(15,20,30,0.98), rgba(5,5,8,0.98));
+            border: 2px solid var(--gold); border-radius: 15px;
+            box-shadow: 0 0 50px rgba(212,175,55,0.3), inset 0 0 20px rgba(212,175,55,0.2);
+            padding: 30px; overflow-y: auto; position: relative;
+            transform: scale(0.95) translateY(20px); transition: 0.3s ease-in-out;
+        }
+        .modal-overlay.show .modal-content { transform: scale(1) translateY(0); }
+        
+        .modal-content::-webkit-scrollbar { width: 6px; }
+        .modal-content::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+        .modal-content::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 3px; }
+
+        .modal-close {
+            position: absolute; top: 15px; right: 20px; font-size: 2rem; color: var(--gold);
+            background: none; border: none; cursor: pointer; transition: 0.3s; text-shadow: 0 0 10px rgba(212,175,55,0.5);
+        }
+        .modal-close:hover { color: var(--danger); transform: scale(1.1); }
+
+        .roster-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 20px; }
+        
+        .roster-group h3 {
+            padding-bottom: 8px; margin-top: 0; margin-bottom: 15px; font-size: 1.4rem; letter-spacing: 2px; text-align: center;
+        }
+        .roster-group.defend h3 { color: var(--defend-text); border-bottom: 2px solid var(--defend-text); text-shadow: 0 0 10px rgba(254,240,138,0.5); }
+        .roster-group.attack h3 { color: var(--attack-text); border-bottom: 2px solid var(--attack-text); text-shadow: 0 0 10px rgba(0,180,216,0.5); }
+        
+        .roster-team {
+            background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px; padding: 15px; margin-bottom: 15px; transition: 0.3s;
+        }
+        .roster-team:hover { background: rgba(255,255,255,0.06); border-color: var(--gold); box-shadow: 0 0 15px rgba(212,175,55,0.2); }
+        
+        .roster-team-title { font-weight: bold; color: var(--gold); font-size: 1.15rem; margin-bottom: 8px; letter-spacing: 1px;}
+        .roster-warning { font-size: 0.8rem; color: var(--danger); background: rgba(239,68,68,0.1); padding: 4px 8px; border-radius: 4px; display: inline-block; margin-bottom: 10px; border: 1px solid var(--danger); font-weight: bold;}
+        
+        .roster-member { font-size: 0.95rem; line-height: 1.8; display: flex; align-items: center; gap: 8px; color: var(--text-silver); }
+        
+        /* 棒次尊號 */
+        .member-role { color: #94a3b8; font-size: 0.85rem; letter-spacing: 1px; min-width: 80px; text-align: right;}
+        
+        .roster-member span.realm { width: 45px; display: inline-block; text-align: center; font-size: 0.75rem; border-radius: 4px; padding: 2px 0; font-weight: bold; letter-spacing: 1px;}
+        .realm.yuanying { background: rgba(59,130,246,0.2); color: #60a5fa; border: 1px solid #3b82f6; } 
+        .realm.jiedan { background: rgba(234,179,8,0.2); color: #fde047; border: 1px solid #eab308; }   
+        .realm.zhuji { background: rgba(239,68,68,0.2); color: #f87171; border: 1px solid #ef4444; }    
+        .realm.lianqi { background: rgba(34,197,94,0.2); color: #4ade80; border: 1px solid #22c55e; }   
+
+        @media (max-width: 1024px) { 
+            .main-grid { grid-template-columns: 1fr; } 
+            .castle-selector { grid-template-columns: repeat(2, 1fr); }
+        }
         @media (max-width: 768px) {
             .score-row { grid-template-columns: 1fr; }
             .step-btn { width: 65px; height: 65px; font-size: 2.2rem; }
-            .main-header h1 { font-size: 1.5rem; letter-spacing: 4px; }
+            .main-header h1 { font-size: 1.5rem; letter-spacing: 4px; margin-top: 30px; }
             .score-input { font-size: 4rem; width: 100px; }
+            .faction-score-board { flex-direction: column; gap: 5px; }
+            .roster-btn { top: 10px; right: 10px; padding: 5px 10px; font-size: 0.8rem; }
+            .roster-grid { grid-template-columns: 1fr; gap: 15px; }
         }
 
         body.broadcast-mode { background: #000; animation: none; }
@@ -281,7 +373,8 @@
         body.broadcast-mode .history-section,
         body.broadcast-mode select,
         body.broadcast-mode .step-btn,
-        body.broadcast-mode .btn-reset-score { display: none !important; }
+        body.broadcast-mode .btn-reset-score,
+        body.broadcast-mode .roster-btn { display: none !important; }
 
         body.broadcast-mode .main-grid { display: flex; height: 100vh; align-items: center; justify-content: center; }
         body.broadcast-mode .panel:first-child { width: 90%; background: none; backdrop-filter: none; z-index: 10; }
@@ -302,14 +395,102 @@
 <body>
 
 <header class="main-header">
-    <h1>月曜修仙鬥法季冠賽</h1>
+    <button class="roster-btn" onclick="openModal()">📜 宗門牒文</button>
+
+    <h1>曜日修仙鬥法季冠賽</h1>
     <p style="color:var(--text-silver); text-shadow: 0 2px 4px #000; letter-spacing: 2px;">⚡ 仙魔巔峰對決 ‧ 雲端即時同步 ⚡</p>
 </header>
+
+<div id="rosterModal" class="modal-overlay" onclick="closeModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <button class="modal-close" onclick="closeModal()">✖</button>
+        <h2 style="color: var(--gold); text-align: center; letter-spacing: 6px; margin-top: 0; text-shadow: 0 0 15px rgba(212,175,55,0.5);">乾坤卷軸 ‧ 宗門牒文</h2>
+        <p style="text-align: center; font-size: 0.9rem; color: #94a3b8; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px; margin-bottom: 20px;">兩大陣營、八大宗門、戰力境界全解析</p>
+
+        <div class="roster-grid">
+            <div class="roster-group defend">
+                <h3>🛡️ 守城組 (深色戰袍)</h3>
+                
+                <div class="roster-team">
+                    <div class="roster-team-title">【混元至誠道宮】 (守城第1隊)</div>
+                    <div class="roster-warning">⚠️含元嬰修士，以 0:-5 落後開局</div>
+                    <div class="roster-member"><span class="member-role">【開山首發】</span> <span class="realm yuanying">元嬰</span> 阿定 ➡️ 混元定海老祖</div>
+                    <div class="roster-member"><span class="member-role">【中流砥柱】</span> <span class="realm zhuji">築基</span> 許誠 ➡️ 至誠無念居士</div>
+                    <div class="roster-member"><span class="member-role">【翻江聖手】</span> <span class="realm zhuji">築基</span> 翔 ➡️ 御空破雲散人</div>
+                    <div class="roster-member"><span class="member-role">【封神終結】</span> <span class="realm lianqi">練氣</span> Vincent ➡️ 文森混元真傳</div>
+                </div>
+
+                <div class="roster-team">
+                    <div class="roster-team-title">【九霄坤任聖宗】 (守城第2隊)</div>
+                    <div class="roster-member"><span class="member-role">【開山首發】</span> <span class="realm jiedan">結丹</span> 阿霆 ➡️ 九霄雷霆真人</div>
+                    <div class="roster-member"><span class="member-role">【中流砥柱】</span> <span class="realm zhuji">築基</span> 俊恩 ➡️ 無極俊逸劍尊</div>
+                    <div class="roster-member"><span class="member-role">【翻江聖手】</span> <span class="realm zhuji">築基</span> Hank ➡️ 幽寒玄冰行者</div>
+                    <div class="roster-member"><span class="member-role">【封神終結】</span> <span class="realm lianqi">練氣</span> Nice ➡️ 奈斯先天道體</div>
+                </div>
+
+                <div class="roster-team">
+                    <div class="roster-team-title">【寂滅申影魔宗】 (守城第3隊)</div>
+                    <div class="roster-warning">⚠️含元嬰修士，以 0:-5 落後開局</div>
+                    <div class="roster-member"><span class="member-role">【開山首發】</span> <span class="realm yuanying">元嬰</span> 小志 ➡️ 寂滅凌志魔尊</div>
+                    <div class="roster-member"><span class="member-role">【中流砥柱】</span> <span class="realm zhuji">築基</span> 威達 ➡️ 震天威霸左使</div>
+                    <div class="roster-member"><span class="member-role">【翻江聖手】</span> <span class="realm zhuji">築基</span> Sam ➡️ 泣血森羅劍客</div>
+                    <div class="roster-member"><span class="member-role">【封神終結】</span> <span class="realm lianqi">練氣</span> 小申 ➡️ 無影申行少主</div>
+                </div>
+
+                <div class="roster-team">
+                    <div class="roster-team-title">【太古鼎恩神殿】 (守城第4隊)</div>
+                    <div class="roster-member"><span class="member-role">【開山首發】</span> <span class="realm jiedan">結丹</span> 桐桐 ➡️ 焚天梧桐仙子</div>
+                    <div class="roster-member"><span class="member-role">【中流砥柱】</span> <span class="realm zhuji">築基</span> 小美 ➡️ 幻夢絕美真修</div>
+                    <div class="roster-member"><span class="member-role">【翻江聖手】</span> <span class="realm zhuji">築基</span> 哈姆 ➡️ 擎天狂姆力士</div>
+                    <div class="roster-member"><span class="member-role">【封神終結】</span> <span class="realm lianqi">練氣</span> Lion ➡️ 狂炎靈獅少尊</div>
+                </div>
+            </div>
+
+            <div class="roster-group attack">
+                <h3>⚔️ 攻城組 (淺色戰袍)</h3>
+                
+                <div class="roster-team">
+                    <div class="roster-team-title">【幽冥鼎恩魔闕】 (攻城A隊)</div>
+                    <div class="roster-warning">⚠️含元嬰修士，以 0:-5 落後開局</div>
+                    <div class="roster-member"><span class="member-role">【開山首發】</span> <span class="realm yuanying">元嬰</span> Tim ➡️ 幽冥天木真君</div>
+                    <div class="roster-member"><span class="member-role">【中流砥柱】</span> <span class="realm zhuji">築基</span> 皓皓 ➡️ 血月皓影行者</div>
+                    <div class="roster-member"><span class="member-role">【翻江聖手】</span> <span class="realm zhuji">築基</span> 嘉友 ➡️ 森羅友信居士</div>
+                    <div class="roster-member"><span class="member-role">【封神終結】</span> <span class="realm lianqi">練氣</span> 德寶 ➡️ 德寶菩提聖子</div>
+                </div>
+
+                <div class="roster-team">
+                    <div class="roster-team-title">【吞天破海仙閣】 (攻城B隊)</div>
+                    <div class="roster-member"><span class="member-role">【開山首發】</span> <span class="realm jiedan">結丹</span> 阿徹 ➡️ 徹明斬天仙尊</div>
+                    <div class="roster-member"><span class="member-role">【中流砥柱】</span> <span class="realm zhuji">築基</span> 包子 ➡️ 吞雲包羅散人</div>
+                    <div class="roster-member"><span class="member-role">【翻江聖手】</span> <span class="realm zhuji">築基</span> 修宇 ➡️ 傲世修宇狂客</div>
+                    <div class="roster-member"><span class="member-role">【封神終結】</span> <span class="realm lianqi">練氣</span> Jay ➡️ 疾風捷影天驕</div>
+                </div>
+
+                <div class="roster-team">
+                    <div class="roster-team-title">【擎天承影劍閣】 (攻城C隊)</div>
+                    <div class="roster-member"><span class="member-role">【開山首發】</span> <span class="realm jiedan">結丹</span> 阿承 ➡️ 擎天劍主・承真人</div>
+                    <div class="roster-member"><span class="member-role">【中流砥柱】</span> <span class="realm zhuji">築基</span> Tony哥 ➡️ 破軍托尼劍尊</div>
+                    <div class="roster-member"><span class="member-role">【翻江聖手】</span> <span class="realm zhuji">築基</span> Rick ➡️ 銳克碎星刀客</div>
+                    <div class="roster-member"><span class="member-role">【封神終結】</span> <span class="realm lianqi">練氣</span> 歐碼 ➡️ 歐碼無雙劍子</div>
+                </div>
+
+                <div class="roster-team">
+                    <div class="roster-team-title">【八荒肯特聖谷】 (攻城D隊)</div>
+                    <div class="roster-member"><span class="member-role">【開山首發】</span> <span class="realm jiedan">結丹</span> Kent ➡️ 八荒聖主・肯特上人</div>
+                    <div class="roster-member"><span class="member-role">【中流砥柱】</span> <span class="realm zhuji">築基</span> 村長 ➡️ 隱世鎮村大長老</div>
+                    <div class="roster-member"><span class="member-role">【翻江聖手】</span> <span class="realm zhuji">築基</span> Paul ➡️ 破滅罡風行者</div>
+                    <div class="roster-member"><span class="member-role">【封神終結】</span> <span class="realm lianqi">練氣</span> 宏爺 ➡️ 宏武鎮殿奇才</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 <div class="castle-selector">
     <button class="castle-btn active" onclick="setCastle(this, '一號場')">🏰 一號場</button>
     <button class="castle-btn" onclick="setCastle(this, '二號場')">🏰 二號場</button>
     <button class="castle-btn" onclick="setCastle(this, '三號場')">🏰 三號場</button>
+    <button class="castle-btn" onclick="setCastle(this, '四號場')">🏰 四號場</button>
 </div>
 
 <div class="main-grid">
@@ -351,6 +532,13 @@
 
     <div class="panel">
         <h2 style="color:var(--gold); text-align:center; margin-top:0; text-shadow: 0 0 10px rgba(212,175,55,0.3); letter-spacing: 2px;">🥇 鴻蒙至尊榜</h2>
+        
+        <div class="faction-score-board">
+            <div class="faction-defend">🛡️ 守城總分 <span id="totalDefend">0</span></div>
+            <div class="faction-vs-small">VS</div>
+            <div class="faction-attack"><span id="totalAttack">0</span> ⚔️ 攻城總分</div>
+        </div>
+
         <div class="scroll-area">
             <table>
                 <thead><tr><th>排名</th><th>隊伍</th><th>得分</th><th>失分</th></tr></thead>
@@ -377,6 +565,15 @@
 <button class="broadcast-ctrl" onclick="toggleBroadcast()">📺 切換轉播模式</button>
 
 <script>
+// 📜 卷軸開關陣法
+function openModal() {
+    document.getElementById('rosterModal').classList.add('show');
+}
+function closeModal(e) {
+    if(e && e.target !== document.getElementById('rosterModal')) return;
+    document.getElementById('rosterModal').classList.remove('show');
+}
+
 const firebaseConfig = {
     apiKey: "AIzaSyC7Yfb6ycsU6vtef87od7D1CvkTdhBofsQ",
     authDomain: "muyao-battle.firebaseapp.com",
@@ -392,8 +589,8 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
 const teamList = [
-    "焚天爗火神宗", "定海逆天霸宗", "太荒巨首無極宗", 
-    "九幽森羅萬劍宗", "摩天戮神穿雲閣", "雙陽伴月喚神宗"  
+    "混元至誠道宮", "九霄坤任聖宗", "寂滅申影魔宗", "太古鼎恩神殿", 
+    "幽冥鼎恩魔闕", "吞天破海仙閣", "擎天承影劍閣", "八荒肯特聖谷"  
 ];
 let stats = {}, historyData = [], currentCastle = "一號場";
 
@@ -401,7 +598,7 @@ function init() {
     const sel1 = document.getElementById('team1'), sel2 = document.getElementById('team2');
     teamList.forEach((t, i) => {
         let opt = `<option value="${t}">${t}</option>`;
-        if(i < 3) sel1.innerHTML += opt; else sel2.innerHTML += opt;
+        if(i < 4) sel1.innerHTML += opt; else sel2.innerHTML += opt;
     });
 
     const activeBtn = document.querySelector('.castle-btn.active');
@@ -453,6 +650,7 @@ function setCastle(btn, name) {
     if (name === '一號場') team1Select.value = teamList[0];
     if (name === '二號場') team1Select.value = teamList[1];
     if (name === '三號場') team1Select.value = teamList[2];
+    if (name === '四號場') team1Select.value = teamList[3];
     
     team1Select.disabled = true; 
     updateView();
@@ -514,6 +712,18 @@ function refreshRank() {
             <td style="color:var(--gold); font-weight:900; text-shadow: 0 0 10px rgba(212,175,55,0.4);">${t.score}</td>
             <td style="opacity:0.6;">${t.loss}</td>
         </tr>`).join('');
+
+    let defendTotal = 0;
+    let attackTotal = 0;
+    teamList.forEach((t, i) => {
+        if(i < 4) {
+            defendTotal += (stats[t]?.score || 0);
+        } else {
+            attackTotal += (stats[t]?.score || 0);
+        }
+    });
+    document.getElementById('totalDefend').innerText = defendTotal;
+    document.getElementById('totalAttack').innerText = attackTotal;
 }
 
 function renderHistory() {
@@ -543,12 +753,12 @@ function resetAll() {
         stats = {};
         teamList.forEach(t => stats[t] = { score: 0, loss: 0 });
         historyData = [];
-        refreshRank();
+        refreshRank(); 
         renderHistory();
         resetCurrentScore();
         
         db.ref('immortal_battle_data').remove().then(() => {
-            alert("✨ 密令正確！所有戰績已隨風消散，排行榜已同步重置。");
+            alert("✨ 密令正確！所有戰績已隨風消散，排行榜與陣營總分已同步重置。");
         }).catch((error) => {
             alert("❌ 清除失敗：" + error);
         });
