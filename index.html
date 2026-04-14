@@ -51,22 +51,53 @@
             appearance: textfield !important;
         }
 
+        /* ---------------------------------------------------
+           🌌 全新背景大陣：陣法流轉 ＋ 冰金對撞
+           --------------------------------------------------- */
         body { 
             font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; 
             color: var(--text-silver); 
             margin: 0; padding: 0; min-height: 100vh;
             overflow-x: hidden; 
-            background: linear-gradient(45deg, #050508, #030d17, #050508, #091321);
-            background-size: 400% 400%;
-            animation: energyFlow 15s ease infinite;
+            background-color: #030305; /* 深邃星空底色 */
+            position: relative; /* 確保偽元素結界不會跑版 */
         }
 
-        @keyframes energyFlow {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+        /* 🔥 方案四：仙魔楚河 ‧ 冰金對撞 (能量裂谷呼吸效果) */
+        body::after {
+            content: ''; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: 
+                radial-gradient(ellipse at 10% 50%, rgba(212, 175, 55, 0.12) 0%, transparent 60%),
+                radial-gradient(ellipse at 90% 50%, rgba(0, 180, 216, 0.12) 0%, transparent 60%);
+            z-index: -2; pointer-events: none;
+            animation: energyPulse 8s ease-in-out infinite alternate;
         }
 
+        @keyframes energyPulse {
+            0% { opacity: 0.6; filter: brightness(0.8); }
+            100% { opacity: 1; filter: brightness(1.2); }
+        }
+
+        /* 🌟 方案一：太極九宮 ‧ 陣法流轉 (巨型 SVG 羅盤旋轉) */
+        body::before {
+            content: ''; position: fixed; top: 50%; left: 50%;
+            width: 200vh; height: 200vh; /* 覆蓋全螢幕的巨型陣法 */
+            margin-top: -100vh; margin-left: -100vh;
+            /* 將精心設計的仙魔雙色陣法 SVG 寫入背景 */
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 800'%3E%3Ccircle cx='400' cy='400' r='380' fill='none' stroke='%23d4af37' stroke-width='2' stroke-dasharray='20 10' opacity='0.3'/%3E%3Ccircle cx='400' cy='400' r='365' fill='none' stroke='%2300b4d8' stroke-width='1' opacity='0.25'/%3E%3Ccircle cx='400' cy='400' r='350' fill='none' stroke='%23d4af37' stroke-width='3' stroke-dasharray='100 20' opacity='0.25'/%3E%3Cpolygon points='400,100 660,250 660,550 400,700 140,550 140,250' fill='none' stroke='%23d4af37' stroke-width='1' opacity='0.2'/%3E%3Cpolygon points='400,100 660,550 140,550' fill='none' stroke='%23d4af37' stroke-width='1.5' opacity='0.2'/%3E%3Cpolygon points='400,700 140,250 660,250' fill='none' stroke='%23d4af37' stroke-width='1.5' opacity='0.2'/%3E%3Ccircle cx='400' cy='400' r='200' fill='none' stroke='%2300b4d8' stroke-width='2' stroke-dasharray='15 15' opacity='0.3'/%3E%3Ccircle cx='400' cy='400' r='180' fill='none' stroke='%23d4af37' stroke-width='1' opacity='0.3'/%3E%3Cpolygon points='400,220 555,490 245,490' fill='none' stroke='%2300b4d8' stroke-width='1' opacity='0.25'/%3E%3Cpolygon points='400,580 245,310 555,310' fill='none' stroke='%2300b4d8' stroke-width='1' opacity='0.25'/%3E%3Ccircle cx='400' cy='400' r='50' fill='none' stroke='%23d4af37' stroke-width='2' opacity='0.4'/%3E%3Ccircle cx='400' cy='400' r='30' fill='none' stroke='%2300b4d8' stroke-width='1' stroke-dasharray='5 5' opacity='0.5'/%3E%3C/svg%3E");
+            background-size: contain; background-repeat: no-repeat; background-position: center;
+            z-index: -1; pointer-events: none;
+            animation: spinArray 240s linear infinite; /* 極度緩慢的運轉，帶來史詩感 */
+        }
+
+        @keyframes spinArray {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* ---------------------------------------------------
+           UI 面板設定
+           --------------------------------------------------- */
         .main-header, .panel {
             animation: panelBreathe 4s ease-in-out infinite alternate;
         }
@@ -77,7 +108,7 @@
         }
 
         .main-header {
-            position: relative; /* 為了讓卷軸按鈕可以絕對定位 */
+            position: relative;
             background: linear-gradient(180deg, rgba(10, 12, 16, 0.95) 0%, rgba(5, 5, 8, 0.95) 100%);
             padding: 20px; text-align: center;
             border-bottom: 4px solid var(--gold);
@@ -98,7 +129,6 @@
             to { background-position: 200% center; }
         }
 
-        /* ⚔️ 4 個場地的網格 */
         .castle-selector {
             display: grid; grid-template-columns: repeat(4, 1fr);
             gap: 10px; max-width: 1200px; margin: 15px auto; padding: 0 15px;
@@ -282,7 +312,7 @@
         }
 
         /* ---------------------------------------------------
-           📜 方案一：乾坤卷軸 ‧ 門派牒文 (全螢幕彈出遮罩)
+           📜 卷軸 ‧ 門派牒文 (全螢幕彈出遮罩)
            --------------------------------------------------- */
         .roster-btn {
             position: absolute; top: 25px; right: 25px;
@@ -341,7 +371,6 @@
         
         .roster-member { font-size: 0.95rem; line-height: 1.8; display: flex; align-items: center; gap: 8px; color: var(--text-silver); }
         
-        /* 棒次尊號 */
         .member-role { color: #94a3b8; font-size: 0.85rem; letter-spacing: 1px; min-width: 80px; text-align: right;}
         
         .roster-member span.realm { width: 45px; display: inline-block; text-align: center; font-size: 0.75rem; border-radius: 4px; padding: 2px 0; font-weight: bold; letter-spacing: 1px;}
@@ -365,6 +394,7 @@
         }
 
         body.broadcast-mode { background: #000; animation: none; }
+        body.broadcast-mode::before, body.broadcast-mode::after { display: none; } /* 轉播模式隱藏背景大陣 */
         body.broadcast-mode .main-header, body.broadcast-mode .panel { animation: none; box-shadow: none; border: none; }
         body.broadcast-mode .castle-selector, 
         body.broadcast-mode .panel:nth-child(2), 
@@ -396,7 +426,6 @@
 
 <header class="main-header">
     <button class="roster-btn" onclick="openModal()">📜 宗門牒文</button>
-
     <h1>曜日修仙鬥法季冠賽</h1>
     <p style="color:var(--text-silver); text-shadow: 0 2px 4px #000; letter-spacing: 2px;">⚡ 仙魔巔峰對決 ‧ 雲端即時同步 ⚡</p>
 </header>
